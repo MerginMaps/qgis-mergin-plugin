@@ -14,7 +14,7 @@ on:
         type: string
 env:
   # Assign the version provided by 'workflow_dispatch' if available; otherwise, use the default.
-  PYTHON_API_CLIENT_VER: ${{ inputs.PYTHON_API_CLIENT_VER != '' && inputs.PYTHON_API_CLIENT_VER || '0.9.3' }}
+  PYTHON_API_CLIENT_VER: ${{ inputs.PYTHON_API_CLIENT_VER != '' && inputs.PYTHON_API_CLIENT_VER || '0.9.4' }}
   GEODIFF_VER:  ${{ inputs.GEODIFF_VER != '' && inputs.GEODIFF_VER || '2.0.4' }}
   PYTHON_VER: "38"
   PLUGIN_NAME: Mergin  
@@ -31,8 +31,8 @@ jobs:
       - name: Download pygeodiff binaries
         run: |
           pip3 download --only-binary=:all: \
-            --no-deps --platform ${PY_PLATFORM} \
             --python-version ${PYTHON_VER} \
+            --no-deps --platform ${PY_PLATFORM} \
             --implementation cp \
             --abi cp${PYTHON_VER} pygeodiff==${GEODIFF_VER}
           unzip -o pygeodiff-$GEODIFF_VER-cp${PYTHON_VER}-cp${PYTHON_VER}-manylinux_2_17_x86_64.${PY_PLATFORM}.whl -d tmp || true

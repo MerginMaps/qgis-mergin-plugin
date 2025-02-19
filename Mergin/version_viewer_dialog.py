@@ -3,6 +3,7 @@
 
 import math
 import os
+import sys
 
 from qgis.core import (
     QgsApplication,  # Used to filter background map
@@ -54,6 +55,7 @@ from .utils import (
     is_versioned_file,
     mergin_project_local_path,
     parse_user_agent,
+    layer_copy,
 )
 
 ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "ui", "ui_versions_viewer.ui")
@@ -110,7 +112,7 @@ class VersionsTableModel(QAbstractTableModel):
         if index.row() >= len(self.versions):
             if role == Qt.DisplayRole:
                 if index.column() == 0:
-                    return "loading⌛"
+                    return "loading..."
             return
         if role == Qt.DisplayRole:
             if index.column() == 0:
@@ -165,7 +167,7 @@ Date: {format_datetime(self.versions[idx]['created'])}"""
         first_row = self.rowCount() - 1
         last_row = first_row + 1
         self.beginRemoveRows(QModelIndex(), first_row, last_row)
-        self.endInsertRows()
+        self.endRemoveRows()
         self._loading = False
 
     def item_from_index(self, index: QModelIndex):
@@ -362,11 +364,11 @@ class VersionViewerDialog(QDialog):
             add_all_action.triggered.connect(self.add_all_to_project)
             btn_add_changes.setMenu(menu)
 
-            # Fix issue on MacOS where the menu was not working properly, it's unclear why we need that
-            btn_add_changes.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-
-            self.toolbar.addWidget(btn_add_changes)
-            self.toolbar.setIconSize(iface.iconSize())
+            # Opt out on MacOs because of a bug on this plateform
+            # TODO Reinstate
+            if sys.platform != "darwin":
+                self.toolbar.addWidget(btn_add_changes)
+                self.toolbar.setIconSize(iface.iconSize())
 
             self.map_canvas.enableAntiAliasing(True)
             self.map_canvas.setSelectionColor(QColor(Qt.cyan))
@@ -458,6 +460,18 @@ class VersionViewerDialog(QDialog):
         # Fetch more if there is no scrollbar yet
         if not self.history_treeview.verticalScrollBar().isVisible():
             self.fetch_from_server()
+
+        # Action we do only on the first fetch
+        #  * resizing the column at the end of the first fetch to fit the text
+        #  * set current selected version to latest server version
+        # Nb current page is increment on each fetch so we check for 2n page
+        if self.fetcher.current_page == 2:
+            self.history_treeview.resizeColumnToContents(0)
+
+            first_row_index = self.history_treeview.model().index(0, 1, QModelIndex())
+            self.selectionModel.setCurrentIndex(
+                first_row_index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
+            )
 
     def on_scrollbar_changed(self, value):
 
@@ -568,6 +582,11 @@ class VersionViewerDialog(QDialog):
     def show_version_changes(self, version):
         self.diff_layers.clear()
 
+        # Sync UI/Thread
+        if int_version(self.version_details["name"]) != version:
+            # latest loaded is differrent from the selected one don't show it
+            return
+
         layers = make_version_changes_layers(QgsProject.instance().homePath(), version)
         for vl in layers:
             self.diff_layers.append(vl)
@@ -597,7 +616,9 @@ class VersionViewerDialog(QDialog):
         else:
             self.toolbar.setEnabled(False)
             self.stackedWidget.setCurrentIndex(1)
-            self.label_info.setText("No GeoPackage updates or removal to show")
+            self.label_info.setText(
+                "No GeoPackage features were added, removed or updated in this version (Note: adding or removing an entire GeoPackage is not shown here)."
+            )
             self.tabWidget.setCurrentIndex(1)
             self.tabWidget.setTabEnabled(0, False)
 
@@ -647,18 +668,15 @@ class VersionViewerDialog(QDialog):
 
     def add_current_to_project(self):
         if self.current_diff:
-            lyr_clone = QgsVectorLayer(
-                self.current_diff.source(),
-                self.current_diff.name() + f" ({self.version_details['name']})",
-                self.current_diff.providerType(),
-            )
+            lyr_clone = layer_copy(self.current_diff)
+            lyr_clone.setName(self.current_diff.name() + f" ({self.version_details['name']})")
             QgsProject.instance().addMapLayer(lyr_clone)
 
     def add_all_to_project(self):
         for layer in self.diff_layers:
-            lyr_clone = QgsVectorLayer(
-                layer.source(), layer.name() + f" ({self.version_details['name']})", layer.providerType()
-            )
+            lyr_clone = layer_copy(layer)
+            lyr_clone.setName(layer.name() + f" ({self.version_details['name']})")
+
             QgsProject.instance().addMapLayer(lyr_clone)
 
     def zoom_full(self):

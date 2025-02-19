@@ -214,8 +214,8 @@ def diff_table_to_features(diff_table, schema_table, fields, cols_to_flds, db_co
 
         f["_op"] = entry_type
 
-        # try to fill in unchanged columns from the database
         if entry_type == "update" and db_conn is not None:
+            # try to fill in unchanged columns from the database
             db_row = get_row_from_db(db_conn, schema_table, entry_changes)
 
             for i in range(len(db_row)):
@@ -233,6 +233,22 @@ def diff_table_to_features(diff_table, schema_table, fields, cols_to_flds, db_co
                 else:
                     f[cols_to_flds[i]] = db_row[i]
                     f[cols_to_flds[i] + fld_old_offset] = db_row[i]
+
+            # try to fill in unchanged columns from the diff
+            for entry_change in entry_changes:
+                i = entry_change["column"]
+                if "old" in entry_change:
+                    if i == geom_col_index:
+                        if entry_change["old"] == None:
+                            # Empty geometry
+                            continue
+                        wkb_with_gpkg_hdr = base64.decodebytes(entry_change["old"].encode("ascii"))
+                        wkb = parse_gpkg_geom_encoding(wkb_with_gpkg_hdr)
+                        g = QgsGeometry()
+                        g.fromWkb(wkb)
+                        f.setGeometry(g)
+                    else:
+                        f[cols_to_flds[i] + fld_old_offset] = entry_change["old"]
 
         for entry_change in entry_changes:
             i = entry_change["column"]

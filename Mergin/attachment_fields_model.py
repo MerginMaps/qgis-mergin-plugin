@@ -28,7 +28,7 @@ class AttachmentFieldsModel(QStandardItemModel):
 
         layers = QgsProject.instance().mapLayers()
         for layer_id, layer in layers.items():
-            if layer.type() != QgsMapLayer.VectorLayer:
+            if layer.type() != QgsMapLayer.LayerType.VectorLayer:
                 continue
 
             for field in layer.fields():

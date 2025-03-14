@@ -112,7 +112,7 @@ class DiffViewerDialog(QDialog):
         mp = MerginProject(QgsProject.instance().homePath())
         project_layers = QgsProject.instance().mapLayers()
         for layer in project_layers.values():
-            if layer.type() != QgsMapLayer.VectorLayer:
+            if layer.type() != QgsMapLayer.LayerType.VectorLayer:
                 continue
 
             if layer.dataProvider().storageType() != "GPKG":

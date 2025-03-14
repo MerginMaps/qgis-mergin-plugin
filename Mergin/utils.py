@@ -864,14 +864,14 @@ def save_raster_as_geotif(raster_layer, project_dir):
     layer_filename = os.path.join(project_dir, os.path.basename(new_raster_filename))
     # Get data type info to set a proper compression type
     dp = raster_layer.dataProvider()
-    is_byte_data = [dp.dataType(i) <= Qgis.Byte for i in range(raster_layer.bandCount())]
+    is_byte_data = [dp.dataType(i) <= Qgis.DataType.Byte for i in range(raster_layer.bandCount())]
     compression = "JPEG" if all(is_byte_data) else "LZW"
     writer_options = [f"COMPRESS={compression}", "TILED=YES"]
 
     raster_writer = QgsRasterFileWriter(layer_filename)
     raster_writer.setCreateOptions(writer_options)
-    raster_writer.setBuildPyramidsFlag(QgsRaster.PyramidsFlagYes)
-    raster_writer.setPyramidsFormat(QgsRaster.PyramidsInternal)
+    raster_writer.setBuildPyramidsFlag(QgsRaster.RasterBuildPyramids.PyramidsFlagYes)
+    raster_writer.setPyramidsFormat(QgsRaster.RasterPyramidsFormat.PyramidsInternal)
     raster_writer.setPyramidsList([2, 4, 8, 16, 32, 64, 128])
     write_raster(raster_layer, raster_writer, layer_filename)
 
@@ -900,7 +900,7 @@ def write_raster(raster_layer, raster_writer, write_path):
         raise PackagingError(f"Couldn't set raster pipe provider for layer {write_path}")
 
     res = raster_writer.writeRaster(pipe, dp.xSize(), dp.ySize(), dp.extent(), raster_layer.crs())
-    if not res == QgsRasterFileWriter.NoError:
+    if not res == QgsRasterFileWriter.WriterError.NoError:
         raise PackagingError(f"Couldn't save raster {write_path} - write error: {res}")
 
     update_datasource(raster_layer, write_path)
@@ -1439,7 +1439,7 @@ def create_tracking_layer(project_path):
     writer = QgsVectorFileWriter.create(
         filename,
         fields,
-        QgsWkbTypes.LineStringZM,
+        QgsWkbTypes.Type.LineStringZM,
         QgsCoordinateReferenceSystem("EPSG:4326"),
         QgsCoordinateTransformContext(),
         options,
@@ -1578,13 +1578,13 @@ def parse_user_agent(user_agent: str) -> str:
 def icon_for_layer(layer) -> QIcon:
     # Used in diff viewer and history viewer
     geom_type = layer.geometryType()
-    if geom_type == QgsWkbTypes.PointGeometry:
+    if geom_type == QgsWkbTypes.GeometryType.PointGeometry:
         return QgsApplication.getThemeIcon("/mIconPointLayer.svg")
-    elif geom_type == QgsWkbTypes.LineGeometry:
+    elif geom_type == QgsWkbTypes.GeometryType.LineGeometry:
         return QgsApplication.getThemeIcon("/mIconLineLayer.svg")
-    elif geom_type == QgsWkbTypes.PolygonGeometry:
+    elif geom_type == QgsWkbTypes.GeometryType.PolygonGeometry:
         return QgsApplication.getThemeIcon("/mIconPolygonLayer.svg")
-    elif geom_type == QgsWkbTypes.UnknownGeometry:
+    elif geom_type == QgsWkbTypes.GeometryType.UnknownGeometry:
         return QgsApplication.getThemeIcon("/mIconGeometryCollectionLayer.svg")
     else:
         return QgsApplication.getThemeIcon("/mIconTableLayer.svg")

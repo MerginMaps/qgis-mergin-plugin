@@ -478,7 +478,8 @@ class VersionViewerDialog(QDialog):
 
             first_row_index = self.history_treeview.model().index(0, 1, QModelIndex())
             self.selectionModel.setCurrentIndex(
-                first_row_index, QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows
+                first_row_index,
+                QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows,
             )
 
     def on_scrollbar_changed(self, value):

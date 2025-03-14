@@ -188,13 +188,17 @@ class MerginPlugin:
             # add layer context menu action for checking local changes
             self.action_show_changes = QAction("Show Local Changes", self.iface.mainWindow())
             self.action_show_changes.setIcon(QIcon(icon_path("file-diff.svg")))
-            self.iface.addCustomActionForLayerType(self.action_show_changes, "", QgsMapLayer.VectorLayer, True)
+            self.iface.addCustomActionForLayerType(
+                self.action_show_changes, "", QgsMapLayer.LayerType.VectorLayer, True
+            )
             self.action_show_changes.triggered.connect(self.view_local_changes)
 
             # add layer context menu action for downloading vector tiles
             self.action_export_mbtiles = QAction("Make available offline…", self.iface.mainWindow())
             self.action_export_mbtiles.setIcon(QIcon(icon_path("file-export.svg")))
-            self.iface.addCustomActionForLayerType(self.action_export_mbtiles, "", QgsMapLayer.VectorTileLayer, False)
+            self.iface.addCustomActionForLayerType(
+                self.action_export_mbtiles, "", QgsMapLayer.LayerType.VectorTileLayer, False
+            )
             self.action_export_mbtiles.triggered.connect(self.export_vector_tiles)
 
         QgsProject.instance().layersAdded.connect(self.add_context_menu_actions)
@@ -567,7 +571,7 @@ class MerginPlugin:
         selected_layers = self.iface.layerTreeView().selectedLayersRecursive()
         layer_name = None
         for layer in selected_layers:
-            if layer.type() != QgsMapLayer.VectorLayer:
+            if layer.type() != QgsMapLayer.LayerType.VectorLayer:
                 continue
 
             if layer.dataProvider().storageType() == "GPKG":
@@ -589,7 +593,7 @@ class MerginPlugin:
         selected_layers = self.iface.layerTreeView().selectedLayersRecursive()
         params = {}
         for layer in selected_layers:
-            if layer.type() != QgsMapLayer.VectorTileLayer:
+            if layer.type() != QgsMapLayer.LayerType.VectorTileLayer:
                 continue
 
             params["INPUT"] = layer
@@ -610,7 +614,7 @@ class MerginRemoteProjectItem(QgsDataItem):
         group_items = project_manager.get_mergin_browser_groups()
         if group_items.get("Shared with me") == parent:
             display_name = self.project_name
-        QgsDataItem.__init__(self, QgsDataItem.Collection, parent, display_name, "/Mergin/" + self.project_name)
+        QgsDataItem.__init__(self, QgsDataItem.Type.Collection, parent, display_name, "/Mergin/" + self.project_name)
         self.path = None
         self.setSortKey(f"1 {self.name()}")
         self.setIcon(QIcon(icon_path("cloud.svg")))
@@ -830,7 +834,7 @@ class FetchMoreItem(QgsDataItem):
 
     def __init__(self, parent):
         self.parent = parent
-        QgsDataItem.__init__(self, QgsDataItem.Collection, parent, "Double-click for more...", "")
+        QgsDataItem.__init__(self, QgsDataItem.Type.Collection, parent, "Double-click for more...", "")
         self.setIcon(QIcon(icon_path("dots.svg")))
         self.setSortKey("2")  # the item should appear at the bottom of the list
 
@@ -861,7 +865,7 @@ class CreateNewProjectItem(QgsDataItem):
 
     def __init__(self, parent):
         self.parent = parent
-        QgsDataItem.__init__(self, QgsDataItem.Collection, parent, "Create new project...", "")
+        QgsDataItem.__init__(self, QgsDataItem.Type.Collection, parent, "Create new project...", "")
         self.setIcon(QIcon(icon_path("square-plus.svg")))
 
     def handleDoubleClick(self):
@@ -947,7 +951,7 @@ class MerginRootItem(QgsDataCollectionItem):
             local_proj_path = mergin_project_local_path(project_name)
             if local_proj_path is None or not os.path.exists(local_proj_path):
                 item = MerginRemoteProjectItem(self, project, self.project_manager)
-                item.setState(QgsDataItem.Populated)  # make it non-expandable
+                item.setState(QgsDataItem.State.Populated)  # make it non-expandable
             else:
                 item = MerginLocalProjectItem(self, project, self.project_manager)
             sip.transferto(item, self)
@@ -957,7 +961,7 @@ class MerginRootItem(QgsDataCollectionItem):
             items.append(self.fetch_more_item)
         if not items and self.mc.server_type() != ServerType.OLD:
             self.create_new_project_item = CreateNewProjectItem(self)
-            self.create_new_project_item.setState(QgsDataItem.Populated)
+            self.create_new_project_item.setState(QgsDataItem.State.Populated)
             sip.transferto(self.create_new_project_item, self)
             items.append(self.create_new_project_item)
         return items
@@ -965,13 +969,13 @@ class MerginRootItem(QgsDataCollectionItem):
     def createChildrenGroups(self):
         items = []
         my_projects = MerginGroupItem(self, "My projects", "created", "user.svg", 1, self.plugin)
-        my_projects.setState(QgsDataItem.Populated)
+        my_projects.setState(QgsDataItem.State.Populated)
         my_projects.refresh()
         sip.transferto(my_projects, self)
         items.append(my_projects)
 
         shared_projects = MerginGroupItem(self, "Shared with me", "shared", "users.svg", 2, self.plugin)
-        shared_projects.setState(QgsDataItem.Populated)
+        shared_projects.setState(QgsDataItem.State.Populated)
         shared_projects.refresh()
         sip.transferto(shared_projects, self)
         items.append(shared_projects)
@@ -1026,7 +1030,7 @@ class MerginRootItem(QgsDataCollectionItem):
         fetched_count = len(self.projects)
         if fetched_count < self.total_projects_count:
             self.fetch_more_item = FetchMoreItem(self)
-            self.fetch_more_item.setState(QgsDataItem.Populated)
+            self.fetch_more_item.setState(QgsDataItem.State.Populated)
             sip.transferto(self.fetch_more_item, self)
         if isinstance(self, MerginGroupItem):
             group_name = f"{self.base_name} ({self.total_projects_count})"

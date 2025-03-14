@@ -467,7 +467,7 @@ def style_diff_layer(layer, schema_table):
 
     # set up styling of the layer
     darker_factor = 150
-    if layer.geometryType() == QgsWkbTypes.PointGeometry:
+    if layer.geometryType() == QgsWkbTypes.GeometryType.PointGeometry:
         point_symbol_base = {
             "name": "circle",
             "outline_style": "solid",
@@ -504,7 +504,7 @@ def style_diff_layer(layer, schema_table):
         )
         r = QgsRuleBasedRenderer(root_rule)
         layer.setRenderer(r)
-    elif layer.geometryType() == QgsWkbTypes.LineGeometry:
+    elif layer.geometryType() == QgsWkbTypes.GeometryType.LineGeometry:
         line_symbol_base = {
             "capstyle": "square",
             "joinstyle": "bevel",
@@ -531,7 +531,7 @@ def style_diff_layer(layer, schema_table):
         )
         r = QgsRuleBasedRenderer(root_rule)
         layer.setRenderer(r)
-    elif layer.geometryType() == QgsWkbTypes.PolygonGeometry:
+    elif layer.geometryType() == QgsWkbTypes.GeometryType.PolygonGeometry:
         fill_symbol_base = {
             "joinstyle": "bevel",
             "style": "solid",

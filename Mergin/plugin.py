@@ -865,6 +865,7 @@ class MerginRootItem(QgsDataCollectionItem):
         parent=None,
         name="Mergin Maps",
         flag=None,
+        icon=None,
         order=None,
         plugin=None,
     ):
@@ -872,7 +873,7 @@ class MerginRootItem(QgsDataCollectionItem):
         if name != providerKey:
             providerKey = "/Mergin" + name
         QgsDataCollectionItem.__init__(self, parent, name, providerKey)
-        self.setIcon(QIcon(mm_symbol_path()))
+        self.setIcon(QIcon(mm_symbol_path())) if icon is None else self.setIcon(QIcon(icon_path(icon)))
         self.setSortKey(order)
         self.plugin = plugin
         self.project_manager = plugin.manager

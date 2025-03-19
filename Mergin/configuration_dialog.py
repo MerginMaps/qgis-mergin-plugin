@@ -131,7 +131,7 @@ class ConfigurationDialog(QDialog):
         return mc
 
     def test_connection(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         ok, msg = test_server_connection(self.server_url(), self.ui.username.text(), self.ui.password.text())
         QApplication.restoreOverrideCursor()
         self.ui.test_status.setText(msg)

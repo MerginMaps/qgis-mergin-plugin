@@ -31,9 +31,9 @@ class WorkspacesModel(QAbstractListModel):
 
     def data(self, index, role):
         workspace = self.workspaces[index.row()]
-        if role == Qt.UserRole:
+        if role == Qt.ItemDataRole.UserRole:
             return workspace
-        if role == Qt.ToolTipRole:
+        if role == Qt.ItemDataRole.ToolTipRole:
             name = workspace["name"]
             desc = workspace["description"] or ""
             count = workspace["project_count"]
@@ -50,7 +50,7 @@ class WorkspaceItemDelegate(QAbstractItemDelegate):
         return QSize(150, fm.height() * 3 + fm.leading())
 
     def paint(self, painter, option, index):
-        workspace = index.data(Qt.UserRole)
+        workspace = index.data(Qt.ItemDataRole.UserRole)
         description = workspace["description"]
         if description:
             description = description.replace("\n", " ")
@@ -72,15 +72,15 @@ class WorkspaceItemDelegate(QAbstractItemDelegate):
         borderRect = QRect(option.rect.marginsRemoved(QMargins(4, 4, 4, 4)))
 
         painter.save()
-        if option.state & QStyle.State_Selected:
+        if option.state & QStyle.StateFlag.State_Selected:
             painter.fillRect(borderRect, option.palette.highlight())
         painter.drawRect(borderRect)
         painter.setFont(nameFont)
-        painter.drawText(nameRect, Qt.AlignLeading, workspace["name"])
+        painter.drawText(nameRect, Qt.AlignmentFlag.AlignLeading, workspace["name"])
         painter.setFont(option.font)
         fm = QFontMetrics(QFont(option.font))
-        elided_description = fm.elidedText(description, Qt.ElideRight, infoRect.width())
-        painter.drawText(infoRect, Qt.AlignLeading, elided_description)
+        elided_description = fm.elidedText(description, Qt.TextElideMode.ElideRight, infoRect.width())
+        painter.drawText(infoRect, Qt.AlignmentFlag.AlignLeading, elided_description)
         painter.restore()
 
 
@@ -143,5 +143,5 @@ class WorkspaceSelectionDialog(QDialog):
         if not index.isValid():
             return
 
-        self.workspace = self.proxy.data(index, Qt.UserRole)
+        self.workspace = self.proxy.data(index, Qt.ItemDataRole.UserRole)
         QDialog.accept(self)

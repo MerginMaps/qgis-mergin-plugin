@@ -72,8 +72,8 @@ ui_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "ui", "ui_ve
 
 
 class VersionsTableModel(QAbstractTableModel):
-    VERSION = Qt.UserRole + 1
-    VERSION_NAME = Qt.UserRole + 2
+    VERSION = Qt.ItemDataRole.UserRole + 1
+    VERSION_NAME = Qt.ItemDataRole.UserRole + 2
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -108,11 +108,11 @@ class VersionsTableModel(QAbstractTableModel):
         return len(self.headers)
 
     def headerData(self, section, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.headers[section]
         return None
 
-    def data(self, index, role=Qt.DisplayRole):
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
 
@@ -120,11 +120,11 @@ class VersionsTableModel(QAbstractTableModel):
 
         # Edge case last row when loading
         if index.row() >= len(self.versions):
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 if index.column() == 0:
                     return "loading..."
             return
-        if role == Qt.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 0:
                 if self.versions[idx]["name"] == self.current_version:
                     return f'{self.versions[idx]["name"]} (local)'
@@ -133,15 +133,15 @@ class VersionsTableModel(QAbstractTableModel):
                 return self.versions[idx]["author"]
             if index.column() == 2:
                 return contextual_date(self.versions[idx]["created"])
-        elif role == Qt.TextAlignmentRole:
+        elif role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() == 0:
-                return Qt.AlignLeft
-        elif role == Qt.FontRole:
+                return Qt.AlignmentFlag.AlignLeft
+        elif role == Qt.ItemDataRole.FontRole:
             if self.versions[idx]["name"] == self.current_version:
                 font = QFont()
                 font.setBold(True)
                 return font
-        elif role == Qt.ToolTipRole:
+        elif role == Qt.ItemDataRole.ToolTipRole:
             return f"""Version: {self.versions[idx]['name'] }
 Author: {self.versions[idx]['author']}
 Date: {format_datetime(self.versions[idx]['created'])}"""
@@ -301,7 +301,7 @@ class VersionViewerDialog(QDialog):
         QDialog.__init__(self, parent)
         self.ui = uic.loadUi(ui_file, self)
 
-        with OverrideCursor(Qt.WaitCursor):
+        with OverrideCursor(Qt.CursorShape.WaitCursor):
             QgsGui.instance().enableAutoGeometryRestore(self)
 
             self.mc = mc
@@ -389,7 +389,7 @@ class VersionViewerDialog(QDialog):
                 self.toolbar.setIconSize(iface.iconSize())
 
             self.map_canvas.enableAntiAliasing(True)
-            self.map_canvas.setSelectionColor(QColor(Qt.cyan))
+            self.map_canvas.setSelectionColor(QColor(Qt.GlobalColor.cyan))
             self.pan_tool = QgsMapToolPan(self.map_canvas)
             self.map_canvas.setMapTool(self.pan_tool)
 
@@ -408,7 +408,7 @@ class VersionViewerDialog(QDialog):
             self.model_detail = QStandardItemModel()
             self.model_detail.setHorizontalHeaderLabels(["Details"])
 
-            self.details_treeview.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.details_treeview.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             self.details_treeview.setModel(self.model_detail)
 
             self.versionModel.current_version = self.mp.version()
@@ -416,7 +416,7 @@ class VersionViewerDialog(QDialog):
     def exec(self):
         if self.failed_to_fetch:
             msg = f"Client error : Failed to reach history version for project {self.project_path}"
-            QMessageBox.critical(None, "Failed requesting history", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Failed requesting history", msg, QMessageBox.StandardButton.Close)
             return
         try:
             ws_id = self.mp.workspace_id()
@@ -488,7 +488,7 @@ class VersionViewerDialog(QDialog):
 
             first_row_index = self.history_treeview.model().index(0, 1, QModelIndex())
             self.selectionModel.setCurrentIndex(
-                first_row_index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
+                first_row_index, QItemSelectionModel.SelectionFlag.ClearAndSelect | QItemSelectionModel.SelectionFlag.Rows
             )
 
     def on_scrollbar_changed(self, value):

@@ -15,9 +15,9 @@ except ImportError:
 
 
 class AttachmentFieldsModel(QStandardItemModel):
-    LAYER_ID = Qt.UserRole + 1
-    FIELD_NAME = Qt.UserRole + 2
-    EXPRESSION = Qt.UserRole + 3
+    LAYER_ID = Qt.ItemDataRole.UserRole + 1
+    FIELD_NAME = Qt.ItemDataRole.UserRole + 2
+    EXPRESSION = Qt.ItemDataRole.UserRole + 3
 
     def __init__(self, parent=None):
         super().__init__(parent)

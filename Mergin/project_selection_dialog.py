@@ -41,13 +41,13 @@ class SyncStatus(Enum):
 
 
 class ProjectsModel(QStandardItemModel):
-    PROJECT = Qt.UserRole + 1
-    NAME = Qt.UserRole + 2
-    NAMESPACE = Qt.UserRole + 3
-    NAME_WITH_NAMESPACE = Qt.UserRole + 4
-    STATUS = Qt.UserRole + 5
-    LOCAL_DIRECTORY = Qt.UserRole + 6
-    ICON = Qt.UserRole + 7
+    PROJECT = Qt.ItemDataRole.UserRole + 1
+    NAME = Qt.ItemDataRole.UserRole + 2
+    NAMESPACE = Qt.ItemDataRole.UserRole + 3
+    NAME_WITH_NAMESPACE = Qt.ItemDataRole.UserRole + 4
+    STATUS = Qt.ItemDataRole.UserRole + 5
+    LOCAL_DIRECTORY = Qt.ItemDataRole.UserRole + 6
+    ICON = Qt.ItemDataRole.UserRole + 7
 
     def __init__(self, projects=None):
         super(ProjectsModel, self).__init__()
@@ -81,7 +81,7 @@ class ProjectsModel(QStandardItemModel):
                 icon = "refresh.svg"
 
             name_with_namespace = f"{project['namespace']}/{project['name']}"
-            item.setData(name_with_namespace, Qt.DisplayRole)
+            item.setData(name_with_namespace, Qt.ItemDataRole.DisplayRole)
             item.setData(name_with_namespace, ProjectsModel.NAME_WITH_NAMESPACE)
             item.setData(project, ProjectsModel.PROJECT)
             item.setData(project["name"], ProjectsModel.NAME)
@@ -148,7 +148,7 @@ class ProjectItemDelegate(QAbstractItemDelegate):
         iconRect = iconRect.marginsRemoved(QMargins(12, 12, 12, 12))
 
         painter.save()
-        if option.state & QStyle.State_Selected:
+        if option.state & QStyle.StateFlag.State_Selected:
             painter.fillRect(borderRect, option.palette.highlight())
         painter.drawRect(borderRect)
         painter.setFont(nameFont)
@@ -156,12 +156,12 @@ class ProjectItemDelegate(QAbstractItemDelegate):
             text = index.data(ProjectsModel.NAME_WITH_NAMESPACE)
         else:
             text = index.data(ProjectsModel.NAME)
-        elided_text = fm.elidedText(text, Qt.ElideRight, nameRect.width())
-        painter.drawText(nameRect, Qt.AlignLeading, elided_text)
+        elided_text = fm.elidedText(text, Qt.TextElideMode.ElideRight, nameRect.width())
+        painter.drawText(nameRect, Qt.AlignmentFlag.AlignLeading, elided_text)
         painter.setFont(option.font)
         fm = QFontMetrics(QFont(option.font))
-        elided_status = fm.elidedText(index.data(ProjectsModel.STATUS), Qt.ElideRight, infoRect.width())
-        painter.drawText(infoRect, Qt.AlignLeading, elided_status)
+        elided_status = fm.elidedText(index.data(ProjectsModel.STATUS), Qt.TextElideModeElideRight, infoRect.width())
+        painter.drawText(infoRect, Qt.AlignmentFlag.AlignLeading, elided_status)
         icon = index.data(ProjectsModel.ICON)
         if icon:
             icon = QIcon(icon_path(icon))

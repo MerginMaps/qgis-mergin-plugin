@@ -209,11 +209,11 @@ class ProjectConfigWidget(ProjectConfigUiWidget, QgsOptionsPageWidget):
                 "to place required files.",
             )
             self.chk_tracking_enabled.blockSignals(True)
-            self.chk_tracking_enabled.setCheckState(Qt.Unchecked)
+            self.chk_tracking_enabled.setCheckState(Qt.CheckState.Unchecked)
             self.chk_tracking_enabled.blockSignals(False)
 
     def setup_tracking(self):
-        if self.chk_tracking_enabled.checkState() == Qt.Unchecked:
+        if self.chk_tracking_enabled.checkState() == Qt.CheckState.Unchecked:
             return
 
         # check if tracking layer already exists

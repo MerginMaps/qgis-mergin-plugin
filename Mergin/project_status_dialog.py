@@ -56,7 +56,7 @@ class ProjectStatusDialog(QDialog):
         self.push_changes = push_changes
         self.file_to_reset = None
 
-        with OverrideCursor(Qt.WaitCursor):
+        with OverrideCursor(Qt.CursorShape.WaitCursor):
             QgsGui.instance().enableAutoGeometryRestore(self)
 
             self.btn_sync = QPushButton("Sync")
@@ -265,9 +265,9 @@ class ProjectStatusDialog(QDialog):
             None,
             "Reset changes",
             text,
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
         )
-        if btn_reply != QMessageBox.Yes:
+        if btn_reply != QMessageBox.StandardButton.Yes:
             return
         return self.done(self.RESET_CHANGES)

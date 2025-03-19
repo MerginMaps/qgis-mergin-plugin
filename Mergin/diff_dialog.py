@@ -32,7 +32,7 @@ class DiffViewerDialog(QDialog):
         QDialog.__init__(self, parent)
         self.ui = uic.loadUi(ui_file, self)
 
-        with OverrideCursor(Qt.WaitCursor):
+        with OverrideCursor(Qt.CursorShape.WaitCursor):
             QgsGui.instance().enableAutoGeometryRestore(self)
             settings = QSettings()
             state = settings.value("Mergin/changesViewerSplitterSize")
@@ -83,7 +83,7 @@ class DiffViewerDialog(QDialog):
             self.toolbar.setIconSize(iface.iconSize())
 
             self.map_canvas.enableAntiAliasing(True)
-            self.map_canvas.setSelectionColor(QColor(Qt.cyan))
+            self.map_canvas.setSelectionColor(QColor(Qt.GlobalColor.cyan))
             self.pan_tool = QgsMapToolPan(self.map_canvas)
             self.map_canvas.setMapTool(self.pan_tool)
 

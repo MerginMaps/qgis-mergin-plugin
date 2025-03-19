@@ -242,7 +242,7 @@ class DownloadVectorTiles(QgsProcessingAlgorithm):
 
                 req = QgsBlockingNetworkRequest()
                 res = req.get(nr, False, feedback)
-                if res == QgsBlockingNetworkRequest.NoError:
+                if res == QgsBlockingNetworkRequest.ErrorCode.NoError:
                     data = req.reply().content()
 
                     comp_obj = zlib.compressobj(

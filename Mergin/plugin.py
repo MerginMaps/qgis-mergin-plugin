@@ -4,7 +4,11 @@
 # Copyright Lutra Consulting Limited
 
 from math import floor
-import sip
+
+try:
+    import sip
+except ImportError:
+    from PyQt6 import sip
 import os
 import shutil
 from pathlib import Path
@@ -296,8 +300,8 @@ class MerginPlugin:
         q += "Would you like to open it and see your Mergin projects?"
         if not browser.isVisible():
             res = QMessageBox.question(None, "Mergin Maps - QGIS Browser Panel", q)
-            if res == QMessageBox.Yes:
-                self.iface.addDockWidget(Qt.LeftDockWidgetArea, browser)
+            if res == QMessageBox.StandardButton.Yes:
+                self.iface.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, browser)
 
     def configure(self):
         """Open plugin configuration dialog."""
@@ -343,7 +347,9 @@ class MerginPlugin:
             "Click on the button below to create one. \n\n"
             "A minimum of one workspace is required to use Mergin Maps."
         )
-        msg_box = QMessageBox(QMessageBox.Icon.Critical, "You do not have any workspace", msg, QMessageBox.Close)
+        msg_box = QMessageBox(
+            QMessageBox.Icon.Critical, "You do not have any workspace", msg, QMessageBox.StandardButton.Close
+        )
         create_button = msg_box.addButton("Create workspace", msg_box.ActionRole)
         create_button.clicked.disconnect()
         create_button.clicked.connect(partial(self.open_configured_url, "/workspaces"))
@@ -631,13 +637,13 @@ class MerginRemoteProjectItem(QgsDataItem):
             self.mc.clone_project(self.project_name, dlg.project_name, dlg.project_namespace)
         except (URLError, ClientError) as e:
             msg = "Failed to clone project {}:\n\n{}".format(self.project_name, str(e))
-            QMessageBox.critical(None, "Clone project", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Clone project", msg, QMessageBox.StandardButton.Close)
             return
         except LoginError as e:
             login_error_message(e)
             return
         msg = "Mergin Maps project cloned successfully."
-        QMessageBox.information(None, "Clone project", msg, QMessageBox.Close)
+        QMessageBox.information(None, "Clone project", msg, QMessageBox.StandardButton.Close)
         self.parent().reload()
         # we also need to reload My projects group as the cloned project could appear there
         group_items = self.project_manager.get_mergin_browser_groups()
@@ -646,17 +652,17 @@ class MerginRemoteProjectItem(QgsDataItem):
 
     def remove_remote_project(self):
         dlg = RemoveProjectDialog(self.project_name)
-        if dlg.exec() == QDialog.Rejected:
+        if dlg.exec() == QDialog.DialogCode.Rejected:
             return
 
         try:
             self.mc.delete_project(self.project_name)
             msg = "Mergin Maps project removed successfully."
-            QMessageBox.information(None, "Remove project", msg, QMessageBox.Close)
+            QMessageBox.information(None, "Remove project", msg, QMessageBox.StandardButton.Close)
             self.parent().reload()
         except (URLError, ClientError) as e:
             msg = "Failed to remove project {}:\n\n{}".format(self.project_name, str(e))
-            QMessageBox.critical(None, "Remove project", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Remove project", msg, QMessageBox.StandardButton.Close)
         except LoginError as e:
             login_error_message(e)
 
@@ -713,9 +719,13 @@ class MerginLocalProjectItem(QgsDirectoryItem):
             "Do you want to proceed?".format(self.project_name)
         )
         btn_reply = QMessageBox.question(
-            None, "Remove local project", msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes
+            None,
+            "Remove local project",
+            msg,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
         )
-        if btn_reply == QMessageBox.No:
+        if btn_reply == QMessageBox.StandardButton.No:
             return
 
         if os.path.exists(self.path):
@@ -726,9 +736,13 @@ class MerginLocalProjectItem(QgsDirectoryItem):
                         "Proceed anyway?".format(self.project_name)
                     )
                     btn_reply = QMessageBox.question(
-                        None, "Remove local project", msg, QMessageBox.No | QMessageBox.No, QMessageBox.Yes
+                        None,
+                        "Remove local project",
+                        msg,
+                        QMessageBox.StandardButton.No | QMessageBox.StandardButton.No,
+                        QMessageBox.StandardButton.Yes,
                     )
-                    if btn_reply == QMessageBox.No:
+                    if btn_reply == QMessageBox.StandardButton.No:
                         return
 
                     cur_proj.clear()
@@ -755,7 +769,7 @@ class MerginLocalProjectItem(QgsDirectoryItem):
                     f"Failed to delete your project {self.project_name} because it is open.\n"
                     "You might need to close project or QGIS to remove its files."
                 )
-                QMessageBox.critical(None, "Project delete", msg, QMessageBox.Close)
+                QMessageBox.critical(None, "Project delete", msg, QMessageBox.StandardButton.Close)
                 return
 
         settings = QSettings()
@@ -777,11 +791,11 @@ class MerginLocalProjectItem(QgsDirectoryItem):
         try:
             self.mc.clone_project(self.project_name, dlg.project_name, dlg.project_namespace)
             msg = "Mergin Maps project cloned successfully."
-            QMessageBox.information(None, "Clone project", msg, QMessageBox.Close)
+            QMessageBox.information(None, "Clone project", msg, QMessageBox.StandardButton.Close)
             self.parent().reload()
         except (URLError, ClientError) as e:
             msg = "Failed to clone project {}:\n\n{}".format(self.project_name, str(e))
-            QMessageBox.critical(None, "Clone project", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Clone project", msg, QMessageBox.StandardButton.Close)
         except LoginError as e:
             login_error_message(e)
 

@@ -55,7 +55,7 @@ class CloneProjectDialog(QDialog):
         self.invalid = False
 
     def validate_input(self):
-        is_writable = bool(self.ui.projectNamespace.currentData(Qt.UserRole))
+        is_writable = bool(self.ui.projectNamespace.currentData(Qt.ItemDataRole.UserRole))
         if not is_writable:
             msg = "You do not have permissions to create a project in this workspace!"
             self.ui.edit_project_name.setEnabled(False)

@@ -16,7 +16,7 @@ from qgis.PyQt.QtWidgets import (
     QWizard,
 )
 
-from qgis.core import QgsProject, QgsLayerTreeNode, QgsLayerTreeModel
+from qgis.core import QgsProject, QgsLayerTreeNode, QgsLayerTreeModel, NULL
 from qgis.utils import iface
 
 from .utils import (
@@ -173,7 +173,7 @@ class ProjectSettingsPage(ui_proj_settings, base_proj_settings):
     def check_input(self):
         """Check if entered path is not already a Mergin Maps project dir and has at most a single QGIS project file."""
         # TODO: check if the project exists on the server
-        if not self.project_owner_cbo.currentData(Qt.UserRole):
+        if not self.project_owner_cbo.currentData(Qt.ItemDataRole.UserRole):
             self.create_warning("You do not have permissions to create a project in this workspace!")
             return
         proj_name = self.project_name_ledit.text().strip()
@@ -264,8 +264,8 @@ class LayerTreeProxyModel(QSortFilterProxyModel):
         return 4
 
     def headerData(self, section, orientation, role):
-        if orientation == Qt.Horizontal:
-            if role == Qt.DisplayRole:
+        if orientation == Qt.Orientation.Horizontal:
+            if role == Qt.ItemDataRole.DisplayRole:
                 if section == self.LAYER_COL:
                     return "Layer"
                 elif section == self.PACK_COL:
@@ -284,8 +284,10 @@ class LayerTreeProxyModel(QSortFilterProxyModel):
         return idx
 
     def toggle_item(self, idx):
-        is_checked = self.data(idx, Qt.CheckStateRole) == Qt.Checked
-        self.setData(idx, Qt.Unchecked if is_checked else Qt.Checked, Qt.CheckStateRole)
+        is_checked = self.data(idx, Qt.ItemDataRole.CheckStateRole) == Qt.CheckState.Checked
+        self.setData(
+            idx, Qt.CheckState.Unchecked if is_checked else Qt.CheckState.Checked, Qt.ItemDataRole.CheckStateRole
+        )
 
     def map_layer(self, idx):
         if idx.column() == self.LAYER_COL:
@@ -310,17 +312,17 @@ class LayerTreeProxyModel(QSortFilterProxyModel):
             return self.layer_tree_model.data(self.mapToSource(idx), role)
         layer = self.map_layer(idx)
         if not layer:
-            return QVariant()
-        if role == Qt.CheckStateRole or role == Qt.UserRole:
+            return NULL
+        if role == Qt.ItemDataRole.CheckStateRole or role == Qt.ItemDataRole.UserRole:
             state = self.layers_state[layer.id()]
             if idx.column() == state:
-                return Qt.Checked
+                return Qt.CheckState.Checked
             else:
-                return Qt.Unchecked
-        return QVariant()
+                return Qt.CheckState.Unchecked
+        return NULL
 
     def setData(self, index, value, role):
-        if role == Qt.CheckStateRole:
+        if role == Qt.ItemDataRole.CheckStateRole:
             layer = self.map_layer(index)
             if not layer:
                 return False
@@ -360,14 +362,14 @@ class LayerTreeProxyModel(QSortFilterProxyModel):
 
     def flags(self, idx):
         if idx.column() == self.LAYER_COL:
-            return Qt.ItemIsEnabled
+            return Qt.ItemFlag.ItemIsEnabled
         layer = self.map_layer(idx)
         if not layer:
-            return Qt.NoItemFlags
+            return Qt.ItemFlag.NoItemFlags
         else:
-            enabled_flags = Qt.ItemIsEnabled | Qt.ItemIsEditable | Qt.ItemIsUserCheckable
+            enabled_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable
             if idx.column() == self.LAYER_COL:
-                return Qt.ItemIsEnabled
+                return Qt.ItemFlag.ItemIsEnabled
             elif idx.column() == self.PACK_COL:
                 return enabled_flags if layer.id() in self.packable else Qt.ItemFlags()
             elif idx.column() in (self.KEEP_COL, self.IGNORE_COL):
@@ -389,7 +391,7 @@ class PackageLayersTreeView(QTreeView):
         self.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
 
         self.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
-        self.setEditTriggers(QTreeView.NoEditTriggers)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         self.clicked.connect(self.model().toggle_item)
 
@@ -466,7 +468,7 @@ class NewMerginProjectWizard(QWizard):
         reload_project = False
         failed_packaging = []
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         QApplication.processEvents()
 
         if not self.init_page.cur_proj_no_pack_btn.isChecked():

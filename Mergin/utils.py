@@ -473,9 +473,12 @@ def unsaved_project_check():
     ):
         msg = "There are some unsaved changes. Do you want save them before continue?"
         btn_reply = QMessageBox.warning(
-            None, "Unsaved changes", msg, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel
+            None,
+            "Unsaved changes",
+            msg,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
         )
-        if btn_reply == QMessageBox.Yes:
+        if btn_reply == QMessageBox.StandardButton.Yes:
             for layer in QgsProject.instance().mapLayers().values():
                 if type(layer) is QgsVectorLayer and layer.isModified():
                     layer.commitChanges()
@@ -495,7 +498,7 @@ def unsaved_project_check():
                     else:
                         return UnsavedChangesStrategy.HasUnsavedChanges
             return UnsavedChangesStrategy.NoUnsavedChanges
-        elif btn_reply == QMessageBox.No:
+        elif btn_reply == QMessageBox.StandardButton.No:
             return UnsavedChangesStrategy.HasUnsavedChangesButIgnore
         else:
             return UnsavedChangesStrategy.HasUnsavedChanges
@@ -906,7 +909,7 @@ def write_raster(raster_layer, raster_writer, write_path):
 def login_error_message(e):
     QgsApplication.messageLog().logMessage(f"Mergin Maps plugin: {str(e)}")
     msg = "<font color=red>Security token has been expired, failed to renew. Check your username and password </font>"
-    QMessageBox.critical(None, "Login failed", msg, QMessageBox.Close)
+    QMessageBox.critical(None, "Login failed", msg, QMessageBox.StandardButton.Close)
 
 
 def unhandled_exception_message(error_details, dialog_title, error_text, log_file=None, username=None):

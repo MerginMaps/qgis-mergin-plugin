@@ -1,19 +1,18 @@
 # GPLv3 license
 # Copyright Lutra Consulting Limited
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMessageBox
-from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QMessageBox
 
 
 class CollapsibleBox(QtWidgets.QWidget):
     def __init__(self, text, details, title="Mergin Maps error", parent=None):
         msg = QMessageBox()
         msg.setWindowTitle(title)
-        msg.setTextFormat(Qt.RichText)
+        msg.setTextFormat(Qt.TextFormat.RichText)
         msg.setText(text)
         msg.setIcon(QMessageBox.Icon.Warning)
-        msg.setStandardButtons(QMessageBox.Close)
-        msg.setDefaultButton(QMessageBox.Close)
+        msg.setStandardButtons(QMessageBox.StandardButton.Close)
+        msg.setDefaultButton(QMessageBox.StandardButton.Close)
         msg.setDetailedText(details)
         msg.exec()

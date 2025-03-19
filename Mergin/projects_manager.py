@@ -8,7 +8,7 @@ import posixpath
 
 from qgis.core import QgsProject, Qgis, QgsApplication
 from qgis.utils import iface
-from qgis.PyQt.QtWidgets import QMessageBox, QApplication, QPushButton, QFileDialog
+from qgis.PyQt.QtWidgets import QMessageBox, QDialog, QApplication, QPushButton, QFileDialog
 from qgis.PyQt.QtCore import QSettings, Qt, QTimer
 from urllib.error import URLError
 
@@ -80,7 +80,7 @@ class MerginProjectsManager(object):
                 if len(qgis_files) == 0
                 else "Plugin can only load project with single QGIS project file but {} found.".format(len(qgis_files))
             )
-            QMessageBox.warning(None, "Load QGIS project", msg, QMessageBox.Close)
+            QMessageBox.warning(None, "Load QGIS project", msg, QMessageBox.StandardButton.Close)
 
     def create_project(self, project_name, project_dir, is_public, namespace):
         """
@@ -89,7 +89,7 @@ class MerginProjectsManager(object):
         """
 
         full_project_name = "{}/{}".format(namespace, project_name)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             self.mc.create_project(full_project_name, is_public)
         except ClientError as e:
@@ -120,12 +120,15 @@ class MerginProjectsManager(object):
         if not project_dir:
             # not going to upload anything so just pop a "success" message and exit
             QMessageBox.information(
-                None, "Create Project", "An empty project has been created on the server", QMessageBox.Close
+                None,
+                "Create Project",
+                "An empty project has been created on the server",
+                QMessageBox.StandardButton.Close,
             )
             return True
 
         # get project's metadata from the server and store it locally
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         try:
             project_info = self.mc.project_info(full_project_name)
             MerginProject.write_metadata(project_dir, project_info)
@@ -176,7 +179,10 @@ class MerginProjectsManager(object):
             write_project_variables(self.mc.username(), project_name, full_project_name, "v1", server_url)
 
         QMessageBox.information(
-            None, "Create Project", "Mergin Maps project created and uploaded successfully", QMessageBox.Close
+            None,
+            "Create Project",
+            "Mergin Maps project created and uploaded successfully",
+            QMessageBox.StandardButton.Close,
         )
 
         return True
@@ -193,7 +199,7 @@ class MerginProjectsManager(object):
             project_name = mp.project_full_name()
         except InvalidProject as e:
             msg = f"Failed to get project status:\n\n{str(e)}"
-            QMessageBox.critical(None, "Project status", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Project status", msg, QMessageBox.StandardButton.Close)
             return
 
         if not self.check_project_server(project_dir):
@@ -213,14 +219,14 @@ class MerginProjectsManager(object):
             # accepted we start sync
             return_value = dlg.exec()
 
-            if return_value == ProjectStatusDialog.Accepted:
+            if return_value == QDialog.DialogCode.Accepted:
                 self.sync_project(project_dir)
             elif return_value == ProjectStatusDialog.RESET_CHANGES:
                 self.reset_local_changes(project_dir, dlg.file_to_reset)
 
         except (URLError, ClientError, InvalidProject) as e:
             msg = f"Failed to get status for project {project_name}:\n\n{str(e)}"
-            QMessageBox.critical(None, "Project status", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Project status", msg, QMessageBox.StandardButton.Close)
         except LoginError as e:
             login_error_message(e)
 
@@ -270,11 +276,11 @@ class MerginProjectsManager(object):
                 msg = f"File {files_to_reset} was successfully reset"
             else:
                 msg = "Project local changes were successfully reset"
-            QMessageBox.information(None, "Project reset local changes", msg, QMessageBox.Close)
+            QMessageBox.information(None, "Project reset local changes", msg, QMessageBox.StandardButton.Close)
 
         except Exception as e:
             msg = f"Failed to reset local changes:\n\n{str(e)}"
-            QMessageBox.critical(None, "Project reset local changes", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Project reset local changes", msg, QMessageBox.StandardButton.Close)
 
         self.open_project(os.path.dirname(current_project_filename))
 
@@ -289,7 +295,7 @@ class MerginProjectsManager(object):
                 project_name = mp.project_full_name()
             except InvalidProject as e:
                 msg = f"Failed to sync project:\n\n{str(e)}"
-                QMessageBox.critical(None, "Project syncing", msg, QMessageBox.Close)
+                QMessageBox.critical(None, "Project syncing", msg, QMessageBox.StandardButton.Close)
                 return
         if not self.check_project_server(project_dir):
             return
@@ -307,11 +313,13 @@ class MerginProjectsManager(object):
             pull_changes, push_changes, push_changes_summary = self.mc.project_status(project_dir)
         except InvalidProject as e:
             msg = f"Project is invalid:\n\n{str(e)}"
-            QMessageBox.critical(None, "Project syncing", msg, QMessageBox.Close)
+            QMessageBox.critical(None, "Project syncing", msg, QMessageBox.StandardButton.Close)
             return
 
         if not sum(len(v) for v in list(pull_changes.values()) + list(push_changes.values())):
-            QMessageBox.information(None, "Project sync", "Project is already up-to-date", QMessageBox.Close)
+            QMessageBox.information(
+                None, "Project sync", "Project is already up-to-date", QMessageBox.StandardButton.Close
+            )
             return
 
         dlg = SyncDialog()
@@ -352,7 +360,7 @@ class MerginProjectsManager(object):
         # pull finished, start push
         if any(push_changes.values()) and not self.mc.has_writing_permissions(project_name):
             QMessageBox.information(
-                None, "Project sync", "You have no writing rights to this project", QMessageBox.Close
+                None, "Project sync", "You have no writing rights to this project", QMessageBox.StandardButton.Close
             )
             return
 
@@ -394,7 +402,7 @@ class MerginProjectsManager(object):
         if dlg.is_complete:
             # TODO: report success only when we have actually done anything
             msg = "Mergin Maps project {} synchronised successfully".format(project_name)
-            QMessageBox.information(None, "Project sync", msg, QMessageBox.Close)
+            QMessageBox.information(None, "Project sync", msg, QMessageBox.StandardButton.Close)
             # clear canvas cache so any changes become immediately visible to users
             self.iface.mapCanvas().clearCache()
             self.iface.mapCanvas().refresh()
@@ -414,11 +422,13 @@ class MerginProjectsManager(object):
             "Please click OK if you want to proceed.".format(logs_path)
         )
 
-        btn_reply = QMessageBox.question(None, "Submit diagnostic logs", msg, QMessageBox.Ok | QMessageBox.Cancel)
-        if btn_reply != QMessageBox.Ok:
+        btn_reply = QMessageBox.question(
+            None, "Submit diagnostic logs", msg, QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel
+        )
+        if btn_reply != QMessageBox.StandardButton.Ok:
             return
 
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         log_file_name, error = send_logs(self.mc.username(), logs_path)
         QApplication.restoreOverrideCursor()
 
@@ -431,7 +441,7 @@ class MerginProjectsManager(object):
             None,
             "Submit diagnostic logs",
             "Diagnostic logs successfully submitted - thank you!\n\n{}".format(log_file_name),
-            QMessageBox.Close,
+            QMessageBox.StandardButton.Close,
         )
 
     def get_mergin_browser_groups(self):
@@ -473,8 +483,8 @@ class MerginProjectsManager(object):
         msg_box = QMessageBox()
         msg_box.setWindowTitle("Conflicts found")
         msg_box.setIcon(QMessageBox.Icon.Warning)
-        msg_box.setTextFormat(Qt.RichText)
-        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.setTextFormat(Qt.TextFormat.RichText)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
         msg_box.setText(msg)
         msg_box.exec()
 
@@ -535,7 +545,7 @@ class MerginProjectsManager(object):
                     "Failed to download your project {}.\n"
                     "Please make sure your Mergin Maps settings are correct".format(project_name)
                 )
-                QMessageBox.critical(None, "Project download", msg, QMessageBox.Close)
+                QMessageBox.critical(None, "Project download", msg, QMessageBox.StandardButton.Close)
             elif isinstance(dlg.exception, LoginError):
                 login_error_message(dlg.exception)
             else:
@@ -553,9 +563,13 @@ class MerginProjectsManager(object):
         settings.setValue("Mergin/localProjects/{}/path".format(project_name), target_dir)
         msg = "Your project {} has been successfully downloaded. Do you want to open project file?".format(project_name)
         btn_reply = QMessageBox.question(
-            None, "Project download", msg, QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes
+            None,
+            "Project download",
+            msg,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
         )
-        if btn_reply == QMessageBox.Yes:
+        if btn_reply == QMessageBox.StandardButton.Yes:
             self.open_project(target_dir)
 
         # reload the two browser groups (in case server is old)

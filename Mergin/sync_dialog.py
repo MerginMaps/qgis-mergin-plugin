@@ -4,10 +4,10 @@
 import os
 import sys
 import traceback
-from PyQt5.QtWidgets import QDialog, QApplication
-from PyQt5 import uic
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QPixmap
+from qgis.PyQt.QtWidgets import QDialog, QApplication
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import Qt, QTimer
+from qgis.PyQt.QtGui import QPixmap
 
 from .utils import (
     download_project_async,
@@ -110,7 +110,7 @@ class SyncDialog(QDialog):
         QTimer.singleShot(250, self.download_start_internal)
 
     def download_start_internal(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         try:
             self.job = download_project_async(self.mergin_client, self.project_name, self.target_dir)
@@ -177,7 +177,7 @@ class SyncDialog(QDialog):
         QTimer.singleShot(250, self.push_start_internal)
 
     def push_start_internal(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         try:
             self.job = push_project_async(self.mergin_client, self.target_dir)
@@ -247,7 +247,7 @@ class SyncDialog(QDialog):
         QTimer.singleShot(250, self.pull_start_internal)
 
     def pull_start_internal(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
         try:
             self.job = pull_project_async(self.mergin_client, self.target_dir)
@@ -307,7 +307,7 @@ class SyncDialog(QDialog):
     def cancel_sync_operation(self, msg, cancel_func):
         self.timer.stop()
         self.labelStatus.setText(msg)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
         cancel_func(self.job)
         QApplication.restoreOverrideCursor()
         self.reset_operation(success=False, close=True)
